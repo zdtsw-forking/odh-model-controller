@@ -52,8 +52,7 @@ import (
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	"github.com/opendatahub-io/odh-model-controller/controllers/constants"
-	"github.com/opendatahub-io/odh-model-controller/controllers/utils"
+	ctrlutils "github.com/opendatahub-io/odh-model-controller/controllers/utils"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -71,6 +70,7 @@ var (
 )
 
 const (
+	IstioNamespace                  = "istio-system-test"
 	WorkingNamespace                = "default"
 	MonitoringNS                    = "monitoring-ns"
 	RoleBindingPath                 = "./testdata/results/model-server-ns-role.yaml"
@@ -128,7 +128,7 @@ var _ = BeforeSuite(func() {
 
 	// Register API objects
 	testScheme := runtime.NewScheme()
-	utils.RegisterSchemes(testScheme)
+	ctrlutils.RegisterSchemes(testScheme)
 	utilruntime.Must(authorinov1beta2.AddToScheme(testScheme))
 	utilruntime.Must(istioclientv1beta1.AddToScheme(testScheme))
 
@@ -139,11 +139,11 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cli).NotTo(BeNil())
 
-	// Create istio-system namespace
+	// Create mesh namespace "istio-system-test"
 	istioNamespace := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      constants.IstioNamespace,
-			Namespace: constants.IstioNamespace,
+			Name:      IstioNamespace,
+			// Namespace: IstioNamespace, // WHY it was here before?
 		},
 	}
 	Expect(cli.Create(ctx, istioNamespace)).Should(Succeed())
@@ -212,7 +212,7 @@ var _ = AfterSuite(func() {
 var _ = AfterEach(func() {
 	cleanUp := func(namespace string, cli client.Client) {
 		inNamespace := client.InNamespace(namespace)
-		istioNamespace := client.InNamespace(constants.IstioNamespace)
+		istioNamespace := client.InNamespace(IstioNamespace)
 		Expect(cli.DeleteAllOf(context.TODO(), &kservev1alpha1.ServingRuntime{}, inNamespace)).ToNot(HaveOccurred())
 		Expect(cli.DeleteAllOf(context.TODO(), &kservev1beta1.InferenceService{}, inNamespace)).ToNot(HaveOccurred())
 		Expect(cli.DeleteAllOf(context.TODO(), &routev1.Route{}, inNamespace)).ToNot(HaveOccurred())
@@ -237,7 +237,7 @@ func convertToStructuredResource(path string, out runtime.Object) error {
 		return err
 	}
 
-	return utils.ConvertToStructuredResource(data, out)
+	return ctrlutils.ConvertToStructuredResource(data, out)
 }
 
 func convertToUnstructuredResource(path string, out *unstructured.Unstructured) error {
@@ -246,7 +246,7 @@ func convertToUnstructuredResource(path string, out *unstructured.Unstructured) 
 		return err
 	}
 
-	return utils.ConvertToUnstructuredResource(data, out)
+	return ctrlutils.ConvertToUnstructuredResource(data, out)
 }
 
 type NamespaceHolder struct {

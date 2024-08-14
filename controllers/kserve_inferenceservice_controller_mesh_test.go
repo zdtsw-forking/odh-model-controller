@@ -53,7 +53,7 @@ var _ = Describe("The KServe mesh reconciler", func() {
 			Spec: maistrav1.ServiceMeshMemberSpec{
 				ControlPlaneRef: maistrav1.ServiceMeshControlPlaneRef{
 					Name:      constants.IstioControlPlaneName,
-					Namespace: constants.IstioNamespace,
+					Namespace: IstioNamespace,
 				}},
 			Status: maistrav1.ServiceMeshMemberStatus{},
 		}

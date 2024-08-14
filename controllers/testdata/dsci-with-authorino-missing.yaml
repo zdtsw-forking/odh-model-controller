@@ -11,7 +11,7 @@ spec:
     controlPlane:
       metricsCollection: Istio
       name: data-science-smcp
-      namespace: istio-system
+      namespace: istio-system-test
     managementState: Managed
 status:
   conditions:

@@ -39,7 +39,7 @@ var _ = Describe("Knative validator webhook", func() {
 		smmr := &v1.ServiceMeshMemberRoll{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      constants.ServiceMeshMemberRollName,
-				Namespace: constants.IstioNamespace,
+				Namespace: IstioNamespace,
 			},
 		}
 
@@ -58,7 +58,7 @@ var _ = Describe("Knative validator webhook", func() {
 		// If there is one, delete it because it conflicts with tests in this file.
 		smmr := v1.ServiceMeshMemberRoll{}
 		getErr := cli.Get(ctx, types.NamespacedName{
-			Namespace: constants.IstioNamespace,
+			Namespace: IstioNamespace,
 			Name:      constants.ServiceMeshMemberRollName,
 		}, &smmr)
 		if getErr != nil {

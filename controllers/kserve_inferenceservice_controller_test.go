@@ -79,7 +79,7 @@ var _ = Describe("The Openshift Kserve model controller", func() {
 			By("By checking that the controller has not created the Route")
 			Consistently(func() error {
 				route := &routev1.Route{}
-				key := types.NamespacedName{Name: getKServeRouteName(inferenceService), Namespace: constants.IstioNamespace}
+				key := types.NamespacedName{Name: getKServeRouteName(inferenceService), Namespace: IstioNamespace}
 				err = cli.Get(ctx, key, route)
 				return err
 			}, timeout, interval).Should(HaveOccurred())
@@ -98,13 +98,13 @@ var _ = Describe("The Openshift Kserve model controller", func() {
 			By("By checking that the controller has created the Route")
 			Eventually(func() error {
 				route := &routev1.Route{}
-				key := types.NamespacedName{Name: getKServeRouteName(inferenceService), Namespace: constants.IstioNamespace}
+				key := types.NamespacedName{Name: getKServeRouteName(inferenceService), Namespace: IstioNamespace}
 				err = cli.Get(ctx, key, route)
 				return err
 			}, timeout, interval).Should(Succeed())
 		})
 		It("With a new Kserve InferenceService, serving cert annotation should be added to the runtime Service object.", func() {
-			// We need to stub the cluster state and indicate where is istio namespace (reusing authConfig test data)
+			// We need to stub the cluster state and indicate where is mesh namespace (reusing authConfig test data)
 			if dsciErr := createDSCI(DSCIWithoutAuthorization); dsciErr != nil && !errors.IsAlreadyExists(dsciErr) {
 				Fail(dsciErr.Error())
 			}
@@ -153,8 +153,8 @@ var _ = Describe("The Openshift Kserve model controller", func() {
 			Expect(isvcService.Annotations[constants.ServingCertAnnotationKey]).Should(Equal(inferenceService.Name))
 		})
 
-		It("should create a secret for runtime and update kserve local gateway in the istio-system namespace", func() {
-			// We need to stub the cluster state and indicate where is istio namespace (reusing authConfig test data)
+		It("should create a secret for runtime and update kserve local gateway in the mesh namespace", func() {
+			// We need to stub the cluster state and indicate where is mesh namespace (reusing authConfig test data)
 			if dsciErr := createDSCI(DSCIWithoutAuthorization); dsciErr != nil && !errors.IsAlreadyExists(dsciErr) {
 				Fail(dsciErr.Error())
 			}
@@ -192,20 +192,20 @@ var _ = Describe("The Openshift Kserve model controller", func() {
 			err = cli.Status().Update(ctx, deployedInferenceService)
 			Expect(err).NotTo(HaveOccurred())
 
-			// Verify that the certificate secret is created in the istio-system namespace.
+			// Verify that the certificate secret is created in the mesh namespace.
 			Eventually(func() error {
 				secret := &corev1.Secret{}
-				return cli.Get(ctx, client.ObjectKey{Namespace: constants.IstioNamespace, Name: fmt.Sprintf("%s-%s", inferenceService.Name, inferenceService.Namespace)}, secret)
+				return cli.Get(ctx, client.ObjectKey{Namespace: IstioNamespace, Name: fmt.Sprintf("%s-%s", inferenceService.Name, inferenceService.Namespace)}, secret)
 			}, timeout, interval).Should(Succeed())
 
-			// Verify that the gateway is updated in the istio-system namespace.
+			// Verify that the gateway is updated in the mesh namespace.
 			var gateway *istioclientv1beta1.Gateway
 			Eventually(func() error {
-				gateway, err = waitForUpdatedGatewayCompletion(cli, "add", constants.IstioNamespace, constants.KServeGatewayName, inferenceService.Name)
+				gateway, err = waitForUpdatedGatewayCompletion(cli, "add", IstioNamespace, constants.KServeGatewayName, inferenceService.Name)
 				return err
 			}, timeout, interval).Should(Succeed())
 
-			// Ensure that the server is successfully added to the KServe local gateway within the istio-system namespace.
+			// Ensure that the server is successfully added to the KServe local gateway within the mesh namespace.
 			targetServerExist := hasServerFromGateway(gateway, fmt.Sprintf("%s-%s", "https", inferenceService.Name))
 			Expect(targetServerExist).Should(BeTrue())
 		})
@@ -253,7 +253,7 @@ var _ = Describe("The Openshift Kserve model controller", func() {
 				Fail(err.Error())
 			}
 
-			// We need to stub the cluster state and indicate where is istio namespace (reusing authConfig test data)
+			// We need to stub the cluster state and indicate where is mesh namespace (reusing authConfig test data)
 			if dsciErr := createDSCI(DSCIWithoutAuthorization); dsciErr != nil && !errors.IsAlreadyExists(dsciErr) {
 				Fail(dsciErr.Error())
 			}
@@ -301,30 +301,30 @@ var _ = Describe("The Openshift Kserve model controller", func() {
 			err = cli.Status().Update(ctx, deployedInferenceService)
 			Expect(err).NotTo(HaveOccurred())
 
-			// Verify that the certificate secret is created in the istio-system namespace.
+			// Verify that the certificate secret is created in the mesh namespace.
 			Eventually(func() error {
 				secret := &corev1.Secret{}
 				return cli.Get(ctx, types.NamespacedName{Name: inferenceService.Name, Namespace: inferenceService.Namespace}, secret)
 			}, timeout, interval).Should(Succeed())
 
 			Eventually(func() error {
-				return cli.Get(ctx, client.ObjectKey{Namespace: constants.IstioNamespace, Name: fmt.Sprintf("%s-%s", inferenceService.Name, inferenceService.Namespace)}, secret)
+				return cli.Get(ctx, client.ObjectKey{Namespace: IstioNamespace, Name: fmt.Sprintf("%s-%s", inferenceService.Name, inferenceService.Namespace)}, secret)
 			}, timeout, interval).Should(Succeed())
 
-			// Verify that the gateway is updated in the istio-system namespace.
+			// Verify that the gateway is updated in the mesh namespace.
 			var gateway *istioclientv1beta1.Gateway
 			Eventually(func() error {
-				gateway, err = waitForUpdatedGatewayCompletion(cli, "add", constants.IstioNamespace, constants.KServeGatewayName, inferenceService.Name)
+				gateway, err = waitForUpdatedGatewayCompletion(cli, "add", IstioNamespace, constants.KServeGatewayName, inferenceService.Name)
 				return err
 			}, timeout, interval).Should(Succeed())
 
-			// Ensure that the server is successfully added to the KServe local gateway within the istio-system namespace.
+			// Ensure that the server is successfully added to the KServe local gateway within the mesh namespace.
 			targetServerExist := hasServerFromGateway(gateway, fmt.Sprintf("%s-%s", "https", inferenceService.Name))
 			Expect(targetServerExist).Should(BeTrue())
 		})
 
 		When("serving cert Secret is rotated", func() {
-			It("should re-sync serving cert Secret to istio-system", func() {
+			It("should re-sync serving cert Secret to mesh namespace", func() {
 				deployedInferenceService := &kservev1beta1.InferenceService{}
 				err := cli.Get(ctx, types.NamespacedName{Name: isvcName, Namespace: testNs}, deployedInferenceService)
 				Expect(err).NotTo(HaveOccurred())
@@ -344,10 +344,10 @@ var _ = Describe("The Openshift Kserve model controller", func() {
 				err = cli.Get(ctx, client.ObjectKey{Namespace: testNs, Name: deployedInferenceService.Name}, srcSecret)
 				Expect(err).NotTo(HaveOccurred())
 
-				// Verify that the certificate secret in the istio-system namespace is updated.
+				// Verify that the certificate secret in the mesh namespace is updated.
 				destSecret := &corev1.Secret{}
 				Eventually(func() error {
-					Expect(cli.Get(ctx, client.ObjectKey{Namespace: constants.IstioNamespace, Name: fmt.Sprintf("%s-%s", deployedInferenceService.Name, deployedInferenceService.Namespace)}, destSecret)).Should(Succeed())
+					Expect(cli.Get(ctx, client.ObjectKey{Namespace: IstioNamespace, Name: fmt.Sprintf("%s-%s", deployedInferenceService.Name, deployedInferenceService.Namespace)}, destSecret)).Should(Succeed())
 					if string(destSecret.Data["tls.crt"]) != updatedDataString {
 						return fmt.Errorf("destSecret is not updated yet")
 					}
@@ -359,28 +359,28 @@ var _ = Describe("The Openshift Kserve model controller", func() {
 		})
 
 		When("infereceService is deleted", func() {
-			It("should remove the Server from the kserve local gateway in istio-system and delete the created Secret", func() {
+			It("should remove the Server from the kserve local gateway from mesh namespace and delete the created Secret", func() {
 				// Delete the existing ISVC
 				deployedInferenceService := &kservev1beta1.InferenceService{}
 				err := cli.Get(ctx, types.NamespacedName{Name: isvcName, Namespace: testNs}, deployedInferenceService)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(cli.Delete(ctx, deployedInferenceService)).Should(Succeed())
 
-				// Verify that the gateway is updated in the istio-system namespace.
+				// Verify that the gateway is updated in the mesh namespace.
 				var gateway *istioclientv1beta1.Gateway
 				Eventually(func() error {
-					gateway, err = waitForUpdatedGatewayCompletion(cli, "delete", constants.IstioNamespace, constants.KServeGatewayName, isvcName)
+					gateway, err = waitForUpdatedGatewayCompletion(cli, "delete", IstioNamespace, constants.KServeGatewayName, isvcName)
 					return err
 				}, timeout, interval).Should(Succeed())
 
-				// Ensure that the server is successfully removed from the KServe local gateway within the istio-system namespace.
+				// Ensure that the server is successfully removed from the KServe local gateway within the mesh namespace.
 				targetServerExist := hasServerFromGateway(gateway, isvcName)
 				Expect(targetServerExist).Should(BeFalse())
 
-				// Ensure that the synced Secret is successfully deleted within the istio-system namespace.
+				// Ensure that the synced Secret is successfully deleted within the mesh namespace.
 				secret := &corev1.Secret{}
 				Eventually(func() error {
-					return cli.Get(ctx, client.ObjectKey{Namespace: constants.IstioNamespace, Name: fmt.Sprintf("%s-%s", isvcName, constants.IstioNamespace)}, secret)
+					return cli.Get(ctx, client.ObjectKey{Namespace: IstioNamespace, Name: fmt.Sprintf("%s-%s", isvcName, IstioNamespace)}, secret)
 				}, timeout, interval).ShouldNot(Succeed())
 			})
 		})

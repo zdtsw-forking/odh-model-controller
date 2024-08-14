@@ -14,7 +14,7 @@ import (
 	"github.com/opendatahub-io/odh-model-controller/controllers/constants"
 	"github.com/opendatahub-io/odh-model-controller/controllers/processors"
 	"github.com/opendatahub-io/odh-model-controller/controllers/resources"
-	"github.com/opendatahub-io/odh-model-controller/controllers/utils"
+	ctrlutils "github.com/opendatahub-io/odh-model-controller/controllers/utils"
 )
 
 type KserveServiceMeshMemberReconciler struct {
@@ -64,7 +64,7 @@ func (r *KserveServiceMeshMemberReconciler) Cleanup(ctx context.Context, log log
 }
 
 func (r *KserveServiceMeshMemberReconciler) createDesiredResource(ctx context.Context, isvc *kservev1beta1.InferenceService) (*v1.ServiceMeshMember, error) {
-	smcpName, smcpNamespace := utils.GetIstioControlPlaneName(ctx, r.client)
+	smcpName, smcpNamespace := ctrlutils.GetIstioControlPlaneName(ctx, r.client)
 
 	return &v1.ServiceMeshMember{
 		ObjectMeta: metav1.ObjectMeta{

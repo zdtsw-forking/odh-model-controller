@@ -27,7 +27,7 @@ import (
 	"github.com/opendatahub-io/odh-model-controller/controllers/constants"
 	"github.com/opendatahub-io/odh-model-controller/controllers/processors"
 	"github.com/opendatahub-io/odh-model-controller/controllers/resources"
-	"github.com/opendatahub-io/odh-model-controller/controllers/utils"
+	ctrlutils "github.com/opendatahub-io/odh-model-controller/controllers/utils"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -64,7 +64,7 @@ func NewKserveGatewayReconciler(client client.Client, clientReader client.Reader
 func (r *KserveGatewayReconciler) Reconcile(ctx context.Context, log logr.Logger, isvc *kservev1beta1.InferenceService) error {
 	log.V(1).Info("Reconciling KServe local gateway for Kserve InferenceService")
 
-	_, meshNamespace = utils.GetIstioControlPlaneName(ctx, r.client)
+	_, meshNamespace = ctrlutils.GetIstioControlPlaneName(ctx, r.client)
 
 	// return if Address.URL is not set
 	if isvc.Status.Address != nil && isvc.Status.Address.URL == nil {
@@ -201,7 +201,7 @@ func (r *KserveGatewayReconciler) processDelta(ctx context.Context, log logr.Log
 		gw.Spec.Servers = append(existingGateway.Spec.Servers, desiredGateway.Spec.Servers[0])
 
 		if err = r.gatewayHandler.Update(ctx, gw); err != nil {
-			log.V(1).Error(err, fmt.Sprintf("Failed to add the Server(%s) from KServe local gateway in the istio-system namespace", desiredGateway.Spec.Servers[0].Port.Name))
+			log.V(1).Error(err, fmt.Sprintf("Failed to add the Server(%s) from KServe local gateway in the mesh namespace", desiredGateway.Spec.Servers[0].Port.Name))
 			return err
 		}
 		return nil
@@ -212,7 +212,7 @@ func (r *KserveGatewayReconciler) processDelta(ctx context.Context, log logr.Log
 func (r *KserveGatewayReconciler) removeServerFromGateway(ctx context.Context, log logr.Logger, serverToRemove string) error {
 	gateway, err := r.gatewayHandler.Get(ctx, types.NamespacedName{Name: constants.KServeGatewayName, Namespace: meshNamespace})
 	if err != nil {
-		log.V(1).Error(err, "Failed to retrieve KServe local gateway in istio-system namespace")
+		log.V(1).Error(err, "Failed to retrieve KServe local gateway in mesh namespace")
 		return err
 	}
 
@@ -225,7 +225,7 @@ func (r *KserveGatewayReconciler) removeServerFromGateway(ctx context.Context, l
 
 	gateway.Spec.Servers = newServers
 	if err := r.gatewayHandler.Update(ctx, gateway); err != nil {
-		log.V(1).Error(err, "Failed to update KServe local gateway in istio-system namespace")
+		log.V(1).Error(err, "Failed to update KServe local gateway in mesh namespace")
 		return err
 	}
 

@@ -23,7 +23,7 @@ import (
 	"github.com/opendatahub-io/odh-model-controller/controllers/comparators"
 	"github.com/opendatahub-io/odh-model-controller/controllers/processors"
 	"github.com/opendatahub-io/odh-model-controller/controllers/resources"
-	"github.com/opendatahub-io/odh-model-controller/controllers/utils"
+	ctrlutils "github.com/opendatahub-io/odh-model-controller/controllers/utils"
 	v1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -79,7 +79,7 @@ func (r *KserveIstioPodMonitorReconciler) Cleanup(ctx context.Context, log logr.
 }
 
 func (r *KserveIstioPodMonitorReconciler) createDesiredResource(ctx context.Context, isvc *kservev1beta1.InferenceService) (*v1.PodMonitor, error) {
-	istioControlPlaneName, meshNamespace := utils.GetIstioControlPlaneName(ctx, r.client)
+	istioControlPlaneName, meshNamespace := ctrlutils.GetIstioControlPlaneName(ctx, r.client)
 
 	desiredPodMonitor := &v1.PodMonitor{
 		ObjectMeta: metav1.ObjectMeta{

@@ -2,7 +2,7 @@ apiVersion: networking.istio.io/v1beta1
 kind: Gateway
 metadata:
   name: kserve-local-gateway
-  namespace: istio-system
+  namespace: istio-system-test
 spec:
   selector:
     knative: ingressgateway
@@ -10,6 +10,6 @@ spec:
   - hosts:
     - 'demo.default.svc.cluster.local'
     port:
-      name: http 
+      name: http
       number: 8080
-      protocol: HTTP 
+      protocol: HTTP

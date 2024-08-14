@@ -189,10 +189,10 @@ func GetIstioControlPlaneName(ctx context.Context, cli client.Client) (istioCont
 	meshNamespace = os.Getenv("MESH_NAMESPACE")
 
 	if len(istioControlPlane) == 0 || len(meshNamespace) == 0 {
-		log.V(1).Info("Trying to read Istio Control Plane name and namespace from DSCI")
+		log.V(1).Info("Trying to read Istio Control Plane name and namespace from DSCI CR")
 		objectList, err := getDSCIObject(ctx, cli)
 		if err != nil {
-			log.V(0).Error(err, "Failed to fetch the DSCI object, using default values")
+			log.V(0).Error(err, "Failed to get DSCI object, using default values")
 			return constants.IstioControlPlaneName, constants.IstioNamespace
 		}
 		for _, item := range objectList.Items {
@@ -243,9 +243,10 @@ func VerifyIfMeshAuthorizationIsEnabled(ctx context.Context, cli client.Client) 
 	// capability is available. To remove this workaround, an enhancement to odh-operator
 	// should be done to reliably pass down to components if the authorization capability
 	// is available, taking into account both managed an unmanaged configurations.
-
+	_, meshNamespace := GetIstioControlPlaneName(ctx, cli)
 	authPolicies := &v1beta1.AuthorizationPolicyList{}
-	if err := cli.List(ctx, authPolicies, client.InNamespace(constants.IstioNamespace)); err != nil && !meta.IsNoMatchError(err) {
+
+	if err := cli.List(ctx, authPolicies, client.InNamespace(meshNamespace)); err != nil && !meta.IsNoMatchError(err) {
 		return false, err
 	}
 	if len(authPolicies.Items) == 0 {

@@ -332,7 +332,7 @@ func createAuthorizationPolicy(authPolicyFile string) error {
 
 	gvr := istiosec_v1b1.SchemeGroupVersion.WithResource("authorizationpolicies")
 	resource := dynamicClient.Resource(gvr)
-	_, createErr := resource.Namespace(constants.IstioNamespace).Create(context.TODO(), obj, metav1.CreateOptions{})
+	_, createErr := resource.Namespace(IstioNamespace).Create(context.TODO(), obj, metav1.CreateOptions{})
 
 	return createErr
 }
@@ -371,5 +371,5 @@ func deleteAuthorizationPolicy(authPolicyFile string) error {
 	}
 
 	gvr := istiosec_v1b1.SchemeGroupVersion.WithResource("authorizationpolicies")
-	return dynamicClient.Resource(gvr).Namespace(constants.IstioNamespace).Delete(context.TODO(), obj.GetName(), metav1.DeleteOptions{})
+	return dynamicClient.Resource(gvr).Namespace(IstioNamespace).Delete(context.TODO(), obj.GetName(), metav1.DeleteOptions{})
 }

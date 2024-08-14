@@ -16,9 +16,8 @@ limitations under the License.
 package constants
 
 const (
-	InferenceServiceKind = "InferenceService"
-
-	IstioNamespace                   = "istio-system"
+	IstioNamespace                   = "istio-system" // default mesh namespace
+	InferenceServiceKind             = "InferenceService"
 	IstioControlPlaneName            = "data-science-smcp"
 	ServiceMeshMemberRollName        = "default"
 	ServiceMeshMemberName            = "default"

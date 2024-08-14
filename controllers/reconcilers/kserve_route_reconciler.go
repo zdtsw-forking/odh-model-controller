@@ -26,6 +26,7 @@ import (
 	constants2 "github.com/opendatahub-io/odh-model-controller/controllers/constants"
 	"github.com/opendatahub-io/odh-model-controller/controllers/processors"
 	"github.com/opendatahub-io/odh-model-controller/controllers/resources"
+	ctrlutils "github.com/opendatahub-io/odh-model-controller/controllers/utils"
 	v1 "github.com/openshift/api/route/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
@@ -55,7 +56,7 @@ func (r *KserveRouteReconciler) Reconcile(ctx context.Context, log logr.Logger, 
 	log.V(1).Info("Reconciling Generic Route for Kserve InferenceService")
 
 	// Create Desired resource
-	desiredResource, err := r.createDesiredResource(isvc)
+	desiredResource, err := r.createDesiredResource(ctx, isvc)
 	if err != nil {
 		return err
 	}
@@ -83,7 +84,7 @@ func (r *KserveRouteReconciler) Cleanup(_ context.Context, _ logr.Logger, _ stri
 	return nil
 }
 
-func (r *KserveRouteReconciler) createDesiredResource(isvc *kservev1beta1.InferenceService) (*v1.Route, error) {
+func (r *KserveRouteReconciler) createDesiredResource(ctx context.Context, isvc *kservev1beta1.InferenceService) (*v1.Route, error) {
 	ingressConfig, err := kservev1beta1.NewIngressConfig(r.client)
 	if err != nil {
 		return nil, err
@@ -128,11 +129,11 @@ func (r *KserveRouteReconciler) createDesiredResource(isvc *kservev1beta1.Infere
 				InsecureEdgeTerminationPolicy: v1.InsecureEdgeTerminationPolicyRedirect,
 			}
 		}
-
+		_, meshNamespace := ctrlutils.GetIstioControlPlaneName(ctx, r.client)
 		route := &v1.Route{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:        getKServeRouteName(isvc),
-				Namespace:   constants2.IstioNamespace,
+				Namespace:   meshNamespace,
 				Annotations: annotations,
 				Labels:      isvc.Labels,
 			},
