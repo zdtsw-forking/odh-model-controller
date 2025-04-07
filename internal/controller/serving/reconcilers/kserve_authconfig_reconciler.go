@@ -143,6 +143,8 @@ func (r *KserveAuthConfigReconciler) getExistingResource(ctx context.Context, is
 
 func (r *KserveAuthConfigReconciler) processDelta(ctx context.Context, log logr.Logger, desiredState *authorinov1beta2.AuthConfig, existingState *authorinov1beta2.AuthConfig) (err error) {
 	comparator := comparators.GetAuthConfigComparator()
+	fmt.Println("WEN desiredState:", desiredState.Spec.Authentication)
+	fmt.Println("WEN existingState:", existingState.Spec.Authentication)
 	delta := r.deltaProcessor.ComputeDelta(comparator, desiredState, existingState)
 
 	if !delta.HasChanges() {
